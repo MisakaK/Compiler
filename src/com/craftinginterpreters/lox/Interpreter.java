@@ -1,0 +1,294 @@
+package com.craftinginterpreters.lox;
+import java.util.List;
+
+import static com.craftinginterpreters.lox.TokenType.*;
+import static com.craftinginterpreters.lox.lox.isPrompt;
+
+class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+
+  public Object visitLiteralExpr(Expr.Literal expr) {
+    return expr.value;
+  }
+
+  public Object visitLogicalExpr(Expr.Logical expr) {
+    Object left = evaluate(expr.left);
+
+    // 对于逻辑运算符，先计算左操作数，判断是否短路
+    if (expr.operator.type == OR) {
+      if (isTruthy(left)) {
+        return left;
+      }
+    }
+    else {
+      if (!isTruthy(left)) {
+        return left;
+      }
+    }
+
+    return evaluate(expr.right);
+  }
+
+  public Object visitGroupingExpr(Expr.Grouping expr) {
+    return evaluate(expr.expression);
+  }
+
+  public Object visitUnaryExpr(Expr.Unary expr) {
+    Object right = evaluate(expr.right);
+    switch (expr.operator.type) {
+      case BANG:
+        return !isTruthy(right);
+      case MINUS:
+        checkNumberOperand(expr.operator, right);
+        return -(double)right;
+    }
+    // 不会到达
+    return null;
+  }
+
+  // 对变量表达式求值
+  @Override
+  public Object visitVariableExpr(Expr.Variable expr) {
+    return environment.get(expr.name);
+  }
+
+  @Override
+  public Object visitAssignExpr(Expr.Assign expr) {
+    Object value = evaluate(expr.value);
+    environment.assign(expr.name, value);
+    return value;
+  }
+
+  // 检查操作数
+  private void checkNumberOperand(Token operator, Object operand) {
+    if (operand instanceof Double) {
+      return;
+    }
+    throw new RuntimeError(operator, "Operand must be s number.");
+  }
+
+  private void checkNumberOperands(Token operator, Object left, Object right) {
+    TokenType type = operator.type;
+      if (left instanceof Double && right instanceof Double) {
+        if (type == SLASH && (double)right == 0) {
+          throw new RuntimeError(operator, "Divisor cannot be 0.");
+        }
+        return;
+      }
+      if (left instanceof String && right instanceof String) {
+        return;
+      }
+      // 除以0的情况
+    throw new RuntimeError(operator, "Operands must be numbers or strings.");
+  }
+
+  // 在lox中，false和nil是假的，其他都是真的
+  private boolean isTruthy(Object object) {
+    if (object == null) {
+      return false;
+    }
+    if (object instanceof Boolean) {
+      return (boolean)object;
+    }
+    return true;
+  }
+
+  private boolean isEqual(Object a, Object b) {
+    if (a == null && b == null) {
+      return true;
+    }
+    if (a == null) {
+      return false;
+    }
+    return a.equals(b);
+  }
+
+  private String stringify(Object object) {
+    if (object == null) {
+      return "nil";
+    }
+
+    if (object instanceof Double) {
+      String text = object.toString();
+      // 只显示整数部分
+      if (text.endsWith(".0")) {
+        text = text.substring(0, text.length() - 2);
+      }
+      return text;
+    }
+
+    return object.toString();
+  }
+
+  private boolean compareString(TokenType type, Object left, Object right) {
+    String s1 = String.valueOf(left), s2 = String.valueOf(right);
+    int res = s1.compareTo(s2);
+    switch (type) {
+      case GREATER:
+        return res > 0;
+      case GREATER_EQUAL:
+        return res >= 0;
+      case LESS:
+        return res < 0;
+      case LESS_EQUAL:
+        return res <= 0;
+    }
+    // 不会到达这里
+//    System.out.println("error: compareString");
+    return false;
+  }
+
+  // 对一条表达式求值
+  private Object evaluate(Expr expr) {
+    return expr.accept(this);
+  }
+
+  // 执行一条语句
+  private void execute(Stmt stmt) {
+    stmt.accept(this);
+  }
+
+  void executeBlock(List<Stmt> statements, Environment environment) {
+    Environment previous = this.environment;
+    try {
+      this.environment = environment;
+
+      for (Stmt statement: statements) {
+        execute(statement);
+      }
+    }
+    // 即使抛出异常，也会恢复环境
+    finally {
+      this.environment = previous;
+    }
+  }
+
+  @Override
+  public Void visitBlockStmt(Stmt.Block stmt) {
+    // 创建一个新的环境
+    executeBlock(stmt.statements, new Environment(environment));
+    return null;
+  }
+
+  @Override
+  public Void visitExpressionStmt(Stmt.Expression stmt) {
+//    Object value = evaluate(stmt.expression);
+//    if (isPrompt) {
+//      System.out.println(stringify(value));
+//    }
+    evaluate(stmt.expression);
+    return null;
+  }
+
+  @Override
+  public Void visitIfStmt(Stmt.If stmt) {
+    if (isTruthy(evaluate(stmt.condition))) {
+      execute(stmt.thenBranch);
+    }
+    else if (stmt.elseBranch != null) {
+      execute(stmt.elseBranch);
+    }
+    return null;
+  }
+
+  public Void visitPrintStmt(Stmt.Print stmt) {
+    Object value = evaluate(stmt.expression);
+    System.out.println(stringify(value));
+    return null;
+  }
+
+  // 如果变量被初始化，就求值。若未初始化，则把值设为nil
+  @Override
+  public Void visitVarStmt(Stmt.Var stmt) {
+    Object value = null;
+    if (stmt.initializer != null) {
+      value = evaluate(stmt.initializer);
+    }
+
+    environment.define(stmt.name.lexeme, value);
+    return null;
+  }
+
+  public Void visitWhileStmt(Stmt.While stmt) {
+    while (isTruthy(evaluate(stmt.condition))) {
+      execute(stmt.body);
+    }
+    return null;
+  }
+
+  public Object visitBinaryExpr(Expr.Binary expr) {
+    Object left = evaluate(expr.left);
+    Object right = evaluate(expr.right);
+
+    switch (expr.operator.type) {
+      // 比较运算符产生布尔值
+      case GREATER:
+        checkNumberOperands(expr.operator, left, right);
+        if (left instanceof Double && right instanceof Double) {
+          return (double)left > (double)right;
+        }
+        else {
+          return compareString(expr.operator.type, left, right);
+        }
+      case GREATER_EQUAL:
+        if (left instanceof Double && right instanceof Double) {
+          return (double)left >= (double)right;
+        }
+        else {
+          return compareString(expr.operator.type, left, right);
+        }
+      case LESS:
+        if (left instanceof Double && right instanceof Double) {
+          return (double)left < (double)right;
+        }
+        else {
+          return compareString(expr.operator.type, left, right);
+        }
+      case LESS_EQUAL:
+        if (left instanceof Double && right instanceof Double) {
+          return (double)left <= (double)right;
+        }
+        else {
+          return compareString(expr.operator.type, left, right);
+        }
+        // 等式运算符需要支持混合类型
+      case BANG_EQUAL:
+        return !isEqual(left, right);
+      case EQUAL_EQUAL:
+        return isEqual(left, right);
+      case MINUS:
+        checkNumberOperands(expr.operator, left, right);
+        return (double)left - (double)right;
+        // 浮点加法和字符串连接
+      case PLUS:
+        if (left instanceof Double && right instanceof Double) {
+          return (double)left + (double)right;
+        }
+        if (left instanceof String && right instanceof String) {
+          return (String)left + (String)right;
+        }
+        // 如果上述两种情况都不满足，则抛出异常
+        throw new RuntimeError(expr.operator, "Operands must be two numbers or two strings.");
+      case SLASH:
+        checkNumberOperands(expr.operator, left, right);
+        return (double)left / (double)right;
+      case STAR:
+        checkNumberOperands(expr.operator, left, right);
+        return (double)left * (double)right;
+    }
+    // 不会到达这里
+    return null;
+  }
+
+  private Environment environment = new Environment();
+
+  void interpret(List<Stmt> statements) {
+    try {
+      for (Stmt statement : statements) {
+        execute(statement);
+      }
+    }
+    catch (RuntimeError error) {
+      lox.runtimeError(error);
+    }
+  }
+}
