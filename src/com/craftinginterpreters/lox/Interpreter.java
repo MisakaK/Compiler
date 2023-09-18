@@ -1,5 +1,6 @@
 package com.craftinginterpreters.lox;
 import java.util.List;
+import java.util.ArrayList;
 
 import static com.craftinginterpreters.lox.TokenType.*;
 import static com.craftinginterpreters.lox.lox.isPrompt;
@@ -180,6 +181,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visitFunctionStmt(Stmt.Function stmt) {
+    // 此处的环境为函数声明时的环境
+    LoxFunction function = new LoxFunction(stmt, environment);
+    environment.define(stmt.name.lexeme, function);
+    return null;
+  }
+
+  @Override
   public Void visitIfStmt(Stmt.If stmt) {
     if (isTruthy(evaluate(stmt.condition))) {
       execute(stmt.thenBranch);
@@ -194,6 +203,16 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     Object value = evaluate(stmt.expression);
     System.out.println(stringify(value));
     return null;
+  }
+
+  @Override
+  public Void visitReturnStmt(Stmt.Return stmt) {
+    Object value = null;
+    if (stmt.value != null) {
+      value = evaluate(stmt.value);
+    }
+
+    throw new Return(value);
   }
 
   // 如果变量被初始化，就求值。若未初始化，则把值设为nil
@@ -279,7 +298,48 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     return null;
   }
 
-  private Environment environment = new Environment();
+  @Override
+  public Object visitCallExpr(Expr.Call expr) {
+    // 通常callee是一个标识符
+    Object callee = evaluate(expr.callee);
+    List<Object> arguments = new ArrayList<>();
+
+    // 构建函数参数列表
+    for (Expr argument : expr.arguments) {
+      arguments.add(evaluate(argument));
+    }
+
+    // 类型检查
+    if (!(callee instanceof LoxCallable)) {
+      throw new RuntimeError(expr.paren, "Can only call functions and classes.");
+    }
+    LoxCallable function = (LoxCallable)callee;
+    // 检查元数
+    if (arguments.size() != function.arity()) {
+      throw new RuntimeError(expr.paren, "Expected " + function.arity() +
+              " arguments but got " + arguments.size() + ".");
+    }
+    return function.call(this, arguments);
+  }
+
+  // globals时终指向全局作用域
+  final Environment globals = new Environment();
+  private Environment environment = globals;
+
+  // 定义clock本地函数
+  Interpreter() {
+    globals.define("clock", new LoxCallable() {
+      @Override
+      public int arity() {
+        return 0;
+      }
+
+      @Override
+      public Object call(Interpreter interpreter, List<Object> arguments) {
+        return (double)System.currentTimeMillis() / 1000.0;
+      }
+    });
+  }
 
   void interpret(List<Stmt> statements) {
     try {

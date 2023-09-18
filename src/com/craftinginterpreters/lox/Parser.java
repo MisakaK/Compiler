@@ -31,6 +31,9 @@ public class Parser {
 
   private Stmt declaration() {
     try {
+      if (match(FUN)) {
+        return function("function");
+      }
       if (match(VAR)) {
         return varDeclaration();
       }
@@ -46,6 +49,9 @@ public class Parser {
   private Stmt statement() {
     if (match(PRINT)) {
       return printStatement();
+    }
+    if (match(RETURN)) {
+      return returnStatement();
     }
     if (match(WHILE)) {
       return whileStatement();
@@ -80,6 +86,18 @@ public class Parser {
     Expr value = expression();
     consume(SEMICOLON, "Expect ';' after value.");
     return new Stmt.Print(value);
+  }
+
+  private Stmt returnStatement() {
+    Token keyword = previous();
+    Expr value = null;
+    // 沒有返回值的情況
+    if (!check(SEMICOLON)) {
+      value = expression();
+    }
+
+    consume(SEMICOLON, "Expect ';' after return value.");
+    return new Stmt.Return(keyword, value);
   }
 
   private Stmt varDeclaration() {
@@ -154,6 +172,29 @@ public class Parser {
 //    }
     consume(SEMICOLON, "Expect ';' after expression.");
     return new Stmt.Expression(expr);
+  }
+
+  private Stmt.Function function(String kind) {
+    Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
+
+    consume(LEFT_PAREN, "Expect '(' after " + kind + " name.");
+    // 构建参数列表
+    List<Token> parameters = new ArrayList<>();
+    // 无参函数
+    if (!check(RIGHT_PAREN)) {
+      do {
+        if (parameters.size() >= 255) {
+          error(peek(), "can't have more than 255 parameters.");
+        }
+        parameters.add(consume(IDENTIFIER, "Expect parameter name."));
+      } while (match(COMMA));
+    }
+
+    consume(RIGHT_PAREN, "Expect ')' after parameters");
+    // 解析函数体，函数体是一个block
+    consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
+    List<Stmt> body = block();
+    return new Stmt.Function(name, parameters, body);
   }
 
   private List<Stmt> block() {
@@ -261,7 +302,37 @@ public class Parser {
       Expr right = unary();
       return new Expr.Unary(operator, right);
     }
-    return primary();
+    return call();
+  }
+
+  private Expr finishCall(Expr callee) {
+    List<Expr> arguments = new ArrayList<>();
+    // 无参函数
+    if (!check(RIGHT_PAREN)){
+      do {
+        if (arguments.size() >= 255) {
+          error(peek(), "Can't have more than 255 arguments.");
+        }
+        arguments.add(expression());
+      } while (match(COMMA));
+    }
+
+    Token paren = consume(RIGHT_PAREN, "Expect ')' after arguments");
+    return new Expr.Call(callee, paren, arguments);
+  }
+
+  private Expr call() {
+    Expr expr = primary();
+
+    while (true) {
+      if (match(LEFT_PAREN)) {
+        expr = finishCall(expr);
+      }
+      else {
+        break;
+      }
+    }
+    return expr;
   }
 
   private Expr primary() {
