@@ -63,7 +63,6 @@ public class lox {
     Parser parser = new Parser(tokens);
     List<Stmt> statements = parser.parse();
     if (hadError) {
-      System.out.println("error!");
       return;
     }
 //    for (Token token : tokens){
@@ -78,7 +77,6 @@ public class lox {
   }
 
   private static void report(int line, String where, String message){
-    System.err.println();
     System.err.println("[line " + line + "] Error" + where + ": " + message);
     hadError = true;
   }

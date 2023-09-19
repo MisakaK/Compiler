@@ -13,6 +13,7 @@ class Scanner {
   // start指向被扫描词素的第一个字符，current指向正在处理的字符
   private int start = 0;
   private int current = 0;
+  // 现在位于第几行？
   private int line = 1;
   // 标识符是否为关键字
   private static final Map<String, TokenType> keywords;
@@ -41,7 +42,7 @@ class Scanner {
   }
 
   List <Token> scanTokens(){
-    // 只要还未到词素尾部，就不断扫描，每次循环可以得到一个token
+    // 只要还未到代码段尾部，就循环扫描，每次扫描得到一个token
     while (!isAtEnd()){
       start = current;
       scanToken();
@@ -50,6 +51,7 @@ class Scanner {
     return tokens;
   }
 
+  // 是否已消费完所有字符
   private boolean isAtEnd(){
     return current >= source.length();
   }
@@ -89,6 +91,9 @@ class Scanner {
             advance();
           }
         }
+        else if (match('*')) {
+          handleComment();
+        }
         else {
           addToken(SLASH);
         }
@@ -115,6 +120,39 @@ class Scanner {
         }
         break;
     }
+  }
+
+  private void handleComment() {
+    int level = 1, pre = line;
+    while (level > 0) {
+      if (match('*')) {
+        if (match('/')){
+          level--;
+        }
+        else {
+          advance();
+        }
+      }
+      else if (match('/')) {
+        if (match('*')) {
+          pre++;
+        }
+        else {
+          advance();
+        }
+      }
+      else if (match('\n')) {
+        pre++;
+      }
+      else if (isAtEnd()) {
+        lox.error(line, "Unclosed comment.");
+        return;
+      }
+      else {
+        advance();
+      }
+    }
+    line = pre;
   }
 
   private void identifier(){
