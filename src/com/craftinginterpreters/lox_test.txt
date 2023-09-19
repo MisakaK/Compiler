@@ -1,8 +1,6 @@
 /*
+this is a comment
 
+*/
 
-
-
-var s = "afaf"; */
-// **
-var s = "abc;
+var s = "fafaf"

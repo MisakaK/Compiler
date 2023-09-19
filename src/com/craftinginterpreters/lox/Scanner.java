@@ -135,7 +135,7 @@ class Scanner {
       }
       else if (match('/')) {
         if (match('*')) {
-          pre++;
+          level++;
         }
         else {
           advance();
