@@ -1,4 +1,5 @@
 package com.craftinginterpreters.lox;
+import javax.naming.event.ObjectChangeListener;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -232,6 +233,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
       execute(stmt.body);
     }
     return null;
+  }
+
+  public Object visitCommaExpr(Expr.Comma expr) {
+    Object nowexpr = null;
+    for (int i = 0; i < expr.commaList.size(); i++) {
+      nowexpr = evaluate(expr.commaList.get(i));
+    }
+    return nowexpr;
   }
 
   public Object visitBinaryExpr(Expr.Binary expr) {

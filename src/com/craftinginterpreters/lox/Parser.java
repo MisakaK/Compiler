@@ -7,6 +7,17 @@ import static com.craftinginterpreters.lox.TokenType.*;
 import static com.craftinginterpreters.lox.lox.isPrompt;
 
 public class Parser {
+//  expression     → comma;
+//  comma          → equality (("," equality))*
+//  equality       → comparison ( ( "!=" | "==" ) comparison )* ;
+//  comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+//  term           → factor ( ( "-" | "+" ) factor )* ;
+//  factor         → unary ( ( "/" | "*" ) unary )* ;
+//  unary          → ( "!" | "-" ) unary
+//               | primary ;
+//  primary        → NUMBER | STRING | "true" | "false" | "nil"
+//          | "(" expression ")" ;
+
   // 哨兵类，返回错误
   private static class ParseError extends RuntimeException {}
   private final List<Token> tokens;
@@ -26,7 +37,7 @@ public class Parser {
   }
 
   private Expr expression() {
-    return assignment();
+    return comma();
   }
 
   private Stmt declaration() {
@@ -206,6 +217,19 @@ public class Parser {
 
     consume(RIGHT_BRACE, "Expect '}' after block.");
     return statements;
+  }
+
+  private Expr comma() {
+    Expr expr = assignment();
+    List<Expr> commaList = new ArrayList<>();
+    commaList.add(expr);
+    while (match(COMMA)) {
+      Expr next = assignment();
+      commaList.add(next);
+      expr = new Expr.Comma(commaList);
+    }
+
+    return expr;
   }
 
   private Expr assignment() {

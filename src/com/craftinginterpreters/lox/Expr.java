@@ -12,6 +12,7 @@ abstract class Expr {
     R visitLogicalExpr(Logical expr);
     R visitUnaryExpr(Unary expr);
     R visitVariableExpr(Variable expr);
+    R visitCommaExpr(Comma expr);
   }
   static class Assign extends Expr {
     Assign(Token name, Expr value) {
@@ -124,6 +125,18 @@ abstract class Expr {
     }
 
     final Token name;
+  }
+  static class Comma extends Expr {
+    Comma(List<Expr> commaList) {
+      this.commaList = commaList;
+    }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitCommaExpr(this);
+    }
+
+    final List<Expr> commaList;
   }
 
   abstract <R> R accept(Visitor<R> visitor);

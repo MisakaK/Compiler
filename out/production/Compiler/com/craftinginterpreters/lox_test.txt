@@ -1,6 +1,7 @@
-/*
-this is a comment
+fun function(n){
+    if (n < 2) return 1;
+    return function(n - 2) + function(n - 1);
+}
 
-*/
-
-var s = "fafaf"
+for (var i = 0; i <= 10; i = i + 1)
+    print function(i);
