@@ -1,5 +1,6 @@
 package com.craftinginterpreters.lox;
 import javax.naming.event.ObjectChangeListener;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -294,8 +295,20 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (left instanceof String && right instanceof String) {
           return (String)left + (String)right;
         }
+        // right是浮点数
+        if (left instanceof String) {
+            DecimalFormat decimalFormat = new DecimalFormat("0.###############"); // 指定要保留的小数位数
+            String text = decimalFormat.format(right);
+            return left + text;
+        }
+        // left是浮点数
+        if (right instanceof String) {
+          DecimalFormat decimalFormat = new DecimalFormat("0.###############"); // 指定要保留的小数位数
+          String text = decimalFormat.format(left);
+          return text + right;
+        }
         // 如果上述两种情况都不满足，则抛出异常
-        throw new RuntimeError(expr.operator, "Operands must be two numbers or two strings.");
+//        throw new RuntimeError(expr.operator, "Operands must be two numbers or two strings.");
       case SLASH:
         checkNumberOperands(expr.operator, left, right);
         return (double)left / (double)right;
