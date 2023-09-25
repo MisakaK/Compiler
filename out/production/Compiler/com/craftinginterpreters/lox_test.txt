@@ -1,7 +1,10 @@
-fun function(n){
+fun f(n){
     if (n < 2) return 1;
-    return function(n - 2) + function(n - 1);
+    return f(n - 2) + f(n - 1);
 }
 
-for (var i = 0; i <= 10; i = i + 1)
-    print function(i);
+var x = clock();
+for(var i = 0; i <= 15; i = i + 1)
+    print(f(i));
+var y = clock();
+print "executed time is " + (y - x) + "s.";

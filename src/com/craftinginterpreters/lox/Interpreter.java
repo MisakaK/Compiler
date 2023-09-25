@@ -188,6 +188,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     // 此处的环境为函数声明时的环境
     LoxFunction function = new LoxFunction(stmt, environment);
     environment.define(stmt.name.lexeme, function);
+    environment.mark(stmt.name.lexeme);
     return null;
   }
 
@@ -363,6 +364,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return (double)System.currentTimeMillis() / 1000.0;
       }
     });
+    globals.mark("clock");
   }
 
   void interpret(List<Stmt> statements) {
