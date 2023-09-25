@@ -7,16 +7,30 @@ import static com.craftinginterpreters.lox.TokenType.*;
 import static com.craftinginterpreters.lox.lox.isPrompt;
 
 public class Parser {
+//  program        → declaration* EOF
+//  declaration    → varDecl
+//               | statement
+//  varDecl        → "var" IDENTIFIER ( "=" expression )? ";"
+//  statement      → exprStmt
+//               | printStmt
+//               | block
+//  block          → "{" declaration* "}"
+//  exprStmt       → expression ";"
+//  printStmt      → "print" expression ";"
+
 //  expression     → comma;
-//  comma          → equality (("," equality))*
-//  equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-//  comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-//  term           → factor ( ( "-" | "+" ) factor )* ;
-//  factor         → unary ( ( "/" | "*" ) unary )* ;
+
+//  comma          → assignment (("," assignment))*
+//  assignment     → IDENTIFIER "=" assignment
+//               | equality
+//  equality       → comparison ( ( "!=" | "==" ) comparison )*
+//  comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )*
+//  term           → factor ( ( "-" | "+" ) factor )*
+//  factor         → unary ( ( "/" | "*" ) unary )*
 //  unary          → ( "!" | "-" ) unary
-//               | primary ;
+//               | primary
 //  primary        → NUMBER | STRING | "true" | "false" | "nil"
-//          | "(" expression ")" ;
+//          | "(" expression ")" | IDENTIFIER;
 
   // 哨兵类，返回错误
   private static class ParseError extends RuntimeException {}
@@ -28,7 +42,7 @@ public class Parser {
     this.tokens = tokens;
   }
 
-  List<Stmt> parse(){
+  List<Stmt> parse() {
     ArrayList<Stmt> statements = new ArrayList<>();
     while (!isAtEnd()) {
       statements.add(declaration());
@@ -113,8 +127,8 @@ public class Parser {
 
   private Stmt varDeclaration() {
     Token name = consume(IDENTIFIER, "Expect variable name.");
-
     Expr initializer = null;
+
     if (match(EQUAL)) {
       initializer = expression();
     }
@@ -176,11 +190,11 @@ public class Parser {
   private Stmt expressionStatement() {
     Expr expr = expression();
 
-//    if (isPrompt) {
-//      if (!check(SEMICOLON)){
-//        return new Stmt.Expression(expr);
-//      }
-//    }
+    if (isPrompt) {
+      if (!check(SEMICOLON)){
+        return new Stmt.Expression(expr);
+      }
+    }
     consume(SEMICOLON, "Expect ';' after expression.");
     return new Stmt.Expression(expr);
   }

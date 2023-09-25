@@ -174,10 +174,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitExpressionStmt(Stmt.Expression stmt) {
-//    Object value = evaluate(stmt.expression);
-//    if (isPrompt) {
-//      System.out.println(stringify(value));
-//    }
+    if (isPrompt) {
+      Object value = evaluate(stmt.expression);
+      System.out.println(stringify(value));
+    }
+
     evaluate(stmt.expression);
     return null;
   }
@@ -223,6 +224,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     Object value = null;
     if (stmt.initializer != null) {
       value = evaluate(stmt.initializer);
+      environment.mark(stmt.name.lexeme);
     }
 
     environment.define(stmt.name.lexeme, value);
