@@ -12,23 +12,32 @@ public class Parser {
 //               | statement
 //  varDecl        → "var" IDENTIFIER ( "=" expression )? ";"
 //  statement      → exprStmt
+//               | ifStmt
 //               | printStmt
+//               | whileStmt
+//               | forStmt
 //               | block
+//               | breakStmt
+//  breakStmt -> "break" ";"
+//  whileStmt       → "while" "(" expression ")" statement
+//  forStmt → "for"  "(" (varDecl | exprStmt | ";") expression? ";" expression? ")" statement
+//  ifStmt          → "if" "(" expression ")"
+//  statement   ("else" statement)?
 //  block          → "{" declaration* "}"
 //  exprStmt       → expression ";"
 //  printStmt      → "print" expression ";"
 
-//  expression     → comma;
 
+//  expression     → comma;
 //  comma          → assignment (("," assignment))*
-//  assignment     → IDENTIFIER "=" assignment
-//               | equality
+//  assignment     → IDENTIFIER "=" assignment | logic_or
+//  logic_or       → logic_and("or" logic_and)*
+//  logic_and      → equality("and"equality)*
 //  equality       → comparison ( ( "!=" | "==" ) comparison )*
 //  comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )*
 //  term           → factor ( ( "-" | "+" ) factor )*
 //  factor         → unary ( ( "/" | "*" ) unary )*
-//  unary          → ( "!" | "-" ) unary
-//               | primary
+//  unary          → ( "!" | "-" ) unary | primary
 //  primary        → NUMBER | STRING | "true" | "false" | "nil"
 //          | "(" expression ")" | IDENTIFIER;
 
@@ -90,7 +99,16 @@ public class Parser {
     if (match(IF)) {
       return ifStatement();
     }
+    if (match(BREAK)) {
+      return breakStatement();
+    }
     return expressionStatement();
+  }
+
+  private Stmt breakStatement() {
+    Token keyword = previous();
+    consume(SEMICOLON, "Expect ';' after 'break'.");
+    return new Stmt.Break(keyword);
   }
 
   private Stmt ifStatement() {

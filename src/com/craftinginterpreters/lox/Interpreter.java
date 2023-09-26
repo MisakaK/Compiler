@@ -1,13 +1,15 @@
 package com.craftinginterpreters.lox;
-import javax.naming.event.ObjectChangeListener;
+
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Stack;
 
 import static com.craftinginterpreters.lox.TokenType.*;
 import static com.craftinginterpreters.lox.lox.isPrompt;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+  final private Stack<Boolean> inLoop = new Stack<>();
 
   public Object visitLiteralExpr(Expr.Literal expr) {
     return expr.value;
@@ -233,10 +235,25 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   public Void visitWhileStmt(Stmt.While stmt) {
+    inLoop.push(false);
     while (isTruthy(evaluate(stmt.condition))) {
-      execute(stmt.body);
+      try {
+        execute(stmt.body);
+      }
+      catch (BreakException e) {
+        break;
+      }
     }
+    inLoop.pop();
     return null;
+  }
+
+  @Override
+  public Void visitBreakStmt(Stmt.Break stmt) {
+    if (inLoop.empty()) {
+      throw new RuntimeError(stmt.keyword, "No enclosing loop to break out of.");
+    }
+    throw new BreakException(stmt.keyword, "encountered break!");
   }
 
   public Object visitCommaExpr(Expr.Comma expr) {

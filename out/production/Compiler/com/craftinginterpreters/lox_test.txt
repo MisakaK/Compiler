@@ -1,10 +1,31 @@
-fun f(n){
-    if (n < 2) return 1;
-    return f(n - 2) + f(n - 1);
+for (var i = 1; i <= 5; i = i + 1) {
+    print "Outer Loop: " + i;
+    for (var j = 1; j <= 3; j = j + 1) {
+        print "  Inner Loop: " + j;
+        for (var k = 1; k <= 2; k = k + 1) {
+            print "    Deep Loop: " + k;
+            if (k == 2) {
+                break; // 从最内层循环中断
+            }
+        }
+        if (j == 2) {
+            break; // 从中层循环中断
+        }
+    }
+    if (i == 3) {
+        break; // 从外层循环中断
+    }
 }
-
-var x = clock();
-for(var i = 0; i <= 15; i = i + 1)
-    print(f(i));
-var y = clock();
-print "executed time is " + (y - x) + "s.";
+/*
+Outer Loop: 1
+  Inner Loop: 1
+    Deep Loop: 1
+    Deep Loop: 2
+  Inner Loop: 2
+Outer Loop: 2
+  Inner Loop: 1
+    Deep Loop: 1
+    Deep Loop: 2
+  Inner Loop: 2
+Outer Loop: 3
+*/
