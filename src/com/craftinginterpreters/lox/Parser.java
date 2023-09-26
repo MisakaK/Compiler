@@ -3,6 +3,8 @@ package com.craftinginterpreters.lox;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Stack;
+
 import static com.craftinginterpreters.lox.TokenType.*;
 import static com.craftinginterpreters.lox.lox.isPrompt;
 
@@ -46,6 +48,7 @@ public class Parser {
   private final List<Token> tokens;
   // 扫描器会消费token，current指向下一个待解析的标记
   private int current = 0;
+  private final Stack<Boolean> inLoop = new Stack<>();
 
   Parser(List<Token> tokens) {
     this.tokens = tokens;
@@ -88,10 +91,16 @@ public class Parser {
       return returnStatement();
     }
     if (match(WHILE)) {
-      return whileStatement();
+      inLoop.push(true);
+      Stmt stmt = whileStatement();
+      inLoop.pop();
+      return stmt;
     }
     if (match(FOR)) {
-      return forStatement();
+      inLoop.push(true);
+      Stmt stmt = forStatement();
+      inLoop.pop();
+      return stmt;
     }
     if (match(LEFT_BRACE)) {
       return new Stmt.Block(block());
@@ -108,6 +117,9 @@ public class Parser {
   private Stmt breakStatement() {
     Token keyword = previous();
     consume(SEMICOLON, "Expect ';' after 'break'.");
+    if (inLoop.empty()) {
+      error(keyword, "Break must be in loops.");
+    }
     return new Stmt.Break(keyword);
   }
 
