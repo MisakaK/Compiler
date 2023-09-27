@@ -11,6 +11,9 @@ enum TokenType{
   GREATER, GREATER_EQUAL,
   LESS, LESS_EQUAL,
 
+  // 三目运算符
+  Question, Colon,
+
   // 字面量
   IDENTIFIER, STRING, NUMBER,
 

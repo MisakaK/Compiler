@@ -1,31 +1,27 @@
-for (var i = 1; i <= 5; i = i + 1) {
-    print "Outer Loop: " + i;
-    for (var j = 1; j <= 3; j = j + 1) {
-        print "  Inner Loop: " + j;
-        for (var k = 1; k <= 2; k = k + 1) {
-            print "    Deep Loop: " + k;
-            if (k == 2) {
-                break; // 从最内层循环中断
-            }
-        }
-        if (j == 2) {
-            break; // 从中层循环中断
-        }
-    }
-    if (i == 3) {
-        break; // 从外层循环中断
-    }
-}
-/*
-Outer Loop: 1
-  Inner Loop: 1
-    Deep Loop: 1
-    Deep Loop: 2
-  Inner Loop: 2
-Outer Loop: 2
-  Inner Loop: 1
-    Deep Loop: 1
-    Deep Loop: 2
-  Inner Loop: 2
-Outer Loop: 3
-*/
+// False branch
+print true and false ? "True branch" : "False branch";
+
+// 5
+print 5 + 3 > 6 and 4 - 2 < 5 ? 10 / 2 : 7 * 2;
+
+// 12
+print 10 > 20 and 6 < 8 ? 15 - 5 : 9 + 3;
+
+// equal
+print 3 * 4 == 12 and 8 / 2 != 2 ? "Equal" : "Not equal";
+
+// True branch
+print true or false ? "True branch" : "False branch";
+
+// 5
+print 7 + 2 >= 8 or 3 - 1 <= 5 ? 20 / 4 : 6 * 3;
+
+// 6
+print 15 > 10 or 6 < 4 ? 9 - 3 : 7 + 2;
+
+// Equal
+print 5 * 4 == 20 or 10 / 2 != 5 ? "Equal" : "Not equal";
+
+// C
+var a = false ? "A" : false ? "B" : "C";
+print a;

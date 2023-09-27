@@ -21,7 +21,8 @@ public class GenerateAst {
                 "Logical  : Expr left, Token operator, Expr right",
                 "Unary    : Token operator, Expr right",
                 "Variable : Token name",
-                "Comma    : List<Expr> commaList"
+                "Comma    : List<Expr> commaList",
+                "Conditional : Expr condition, Expr trueBranch, Expr falseBranch"
         ));
 
         defineAst(outputDir, "Stmt", Arrays.asList(

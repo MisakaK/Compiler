@@ -32,7 +32,8 @@ public class Parser {
 
 //  expression     → comma;
 //  comma          → assignment (("," assignment))*
-//  assignment     → IDENTIFIER "=" assignment | logic_or
+//  assignment     → IDENTIFIER "=" assignment | conditional
+//  conditional    → logic_or ("?" conditional ":" conditional)?
 //  logic_or       → logic_and("or" logic_and)*
 //  logic_and      → equality("and"equality)*
 //  equality       → comparison ( ( "!=" | "==" ) comparison )*
@@ -277,7 +278,7 @@ public class Parser {
   }
 
   private Expr assignment() {
-    Expr expr = or();
+    Expr expr = conditional();
 
     // 解析右侧内容
     if (match(EQUAL)) {
@@ -294,6 +295,18 @@ public class Parser {
       error(equals, "Invalid assignment target");
     }
 
+    return expr;
+  }
+
+  private Expr conditional() {
+    Expr expr = or();
+
+    if (match(Question)) {
+      Expr trueBranch = conditional();
+      consume(Colon, "':' is needed after expresstion");
+      Expr falseBranch = conditional();
+      return new Expr.Conditional(expr, trueBranch, falseBranch);
+    }
     return expr;
   }
 

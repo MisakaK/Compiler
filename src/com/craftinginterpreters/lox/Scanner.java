@@ -72,6 +72,8 @@ class Scanner {
       case '+': addToken(PLUS); break;
       case ';': addToken(SEMICOLON); break;
       case '*': addToken(STAR); break;
+      case '?': addToken(Question); break;
+      case ':': addToken(Colon); break;
       case '!':
         addToken(match('=') ? BANG_EQUAL : BANG);
         break;

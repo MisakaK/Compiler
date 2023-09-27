@@ -13,6 +13,7 @@ abstract class Expr {
     R visitUnaryExpr(Unary expr);
     R visitVariableExpr(Variable expr);
     R visitCommaExpr(Comma expr);
+    R visitConditionalExpr(Conditional expr);
   }
   static class Assign extends Expr {
     Assign(Token name, Expr value) {
@@ -137,6 +138,22 @@ abstract class Expr {
     }
 
     final List<Expr> commaList;
+  }
+  static class Conditional extends Expr {
+    Conditional(Expr condition, Expr trueBranch, Expr falseBranch) {
+      this.condition = condition;
+      this.trueBranch = trueBranch;
+      this.falseBranch = falseBranch;
+    }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitConditionalExpr(this);
+    }
+
+    final Expr condition;
+    final Expr trueBranch;
+    final Expr falseBranch;
   }
 
   abstract <R> R accept(Visitor<R> visitor);

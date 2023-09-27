@@ -257,6 +257,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     return nowexpr;
   }
 
+  @Override
+  public Object visitConditionalExpr(Expr.Conditional expr) {
+    if (isTruthy(evaluate(expr.condition))){
+      return evaluate(expr.trueBranch);
+    }
+    return evaluate(expr.falseBranch);
+  }
+
   public Object visitBinaryExpr(Expr.Binary expr) {
     Object left = evaluate(expr.left);
     Object right = evaluate(expr.right);
