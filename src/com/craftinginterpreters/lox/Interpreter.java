@@ -3,7 +3,6 @@ package com.craftinginterpreters.lox;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Stack;
 
 import static com.craftinginterpreters.lox.TokenType.*;
 import static com.craftinginterpreters.lox.lox.isPrompt;

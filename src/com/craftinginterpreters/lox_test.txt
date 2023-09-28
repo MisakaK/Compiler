@@ -1,27 +1,8 @@
-// False branch
-print true and false ? "True branch" : "False branch";
+fun scope(a) {
+    var a = "local";
+}
 
-// 5
-print 5 + 3 > 6 and 4 - 2 < 5 ? 10 / 2 : 7 * 2;
-
-// 12
-print 10 > 20 and 6 < 8 ? 15 - 5 : 9 + 3;
-
-// equal
-print 3 * 4 == 12 and 8 / 2 != 2 ? "Equal" : "Not equal";
-
-// True branch
-print true or false ? "True branch" : "False branch";
-
-// 5
-print 7 + 2 >= 8 or 3 - 1 <= 5 ? 20 / 4 : 6 * 3;
-
-// 6
-print 15 > 10 or 6 < 4 ? 9 - 3 : 7 + 2;
-
-// Equal
-print 5 * 4 == 20 or 10 / 2 != 5 ? "Equal" : "Not equal";
-
-// C
-var a = false ? "A" : false ? "B" : "C";
+var a = "abc";
+print a;
+scope(a);
 print a;

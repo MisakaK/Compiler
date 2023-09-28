@@ -10,8 +10,10 @@ import static com.craftinginterpreters.lox.lox.isPrompt;
 
 public class Parser {
 //  program        → declaration* EOF
-//  declaration    → varDecl
-//               | statement
+//  declaration    → funDecl | varDecl | statement
+//  funDecl        → "fun" function
+//  function       → IDENTIFIER "(" parameters? ")" block
+//  parameters     → IDENTIFIER ( "," IDENTIFIER )*
 //  varDecl        → "var" IDENTIFIER ( "=" expression )? ";"
 //  statement      → exprStmt
 //               | ifStmt
@@ -20,6 +22,8 @@ public class Parser {
 //               | forStmt
 //               | block
 //               | breakStmt
+//               | returnStmt
+//  returnStmt     → "return" expression? ";"
 //  breakStmt -> "break" ";"
 //  whileStmt       → "while" "(" expression ")" statement
 //  forStmt → "for"  "(" (varDecl | exprStmt | ";") expression? ";" expression? ")" statement
@@ -40,9 +44,10 @@ public class Parser {
 //  comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )*
 //  term           → factor ( ( "-" | "+" ) factor )*
 //  factor         → unary ( ( "/" | "*" ) unary )*
-//  unary          → ( "!" | "-" ) unary | primary
-//  primary        → NUMBER | STRING | "true" | "false" | "nil"
-//          | "(" expression ")" | IDENTIFIER;
+//  unary          → ( "!" | "-" ) unary | call
+//  call           → primary ( "(" arguments? ")" )*
+//  primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER;
+//  arguments      → expression ( "," expression )*
 
   // 哨兵类，返回错误
   private static class ParseError extends RuntimeException {}
@@ -386,6 +391,20 @@ public class Parser {
     return call();
   }
 
+  private Expr call() {
+    Expr expr = primary();
+
+    while (true) {
+      if (match(LEFT_PAREN)) {
+        expr = finishCall(expr);
+      }
+      else {
+        break;
+      }
+    }
+    return expr;
+  }
+
   private Expr finishCall(Expr callee) {
     List<Expr> arguments = new ArrayList<>();
     // 无参函数
@@ -400,20 +419,6 @@ public class Parser {
 
     Token paren = consume(RIGHT_PAREN, "Expect ')' after arguments");
     return new Expr.Call(callee, paren, arguments);
-  }
-
-  private Expr call() {
-    Expr expr = primary();
-
-    while (true) {
-      if (match(LEFT_PAREN)) {
-        expr = finishCall(expr);
-      }
-      else {
-        break;
-      }
-    }
-    return expr;
   }
 
   private Expr primary() {
