@@ -64,6 +64,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
       // 全局变量直接在全局环境中找
       return globals.get(name);
     }
+    return value;
   }
 
   @Override
@@ -210,7 +211,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     // 此处的环境为函数声明时的环境
     LoxFunction function = new LoxFunction(stmt, environment);
     environment.define(stmt.name.lexeme, function);
-    environment.mark(stmt.name.lexeme);
     return null;
   }
 
@@ -244,10 +244,9 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   // 如果变量被初始化，就求值。若未初始化，则把值设为nil
   @Override
   public Void visitVarStmt(Stmt.Var stmt) {
-    Object value = null;
+    Object value = uninitialized;
     if (stmt.initializer != null) {
       value = evaluate(stmt.initializer);
-      environment.mark(stmt.name.lexeme);
     }
 
     environment.define(stmt.name.lexeme, value);
@@ -391,6 +390,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   // globals时终指向全局作用域
   final Environment globals = new Environment();
   private Environment environment = globals;
+  private static Object uninitialized = new Object();
 
   // 定义clock本地函数
   Interpreter() {
@@ -405,7 +405,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return (double)System.currentTimeMillis() / 1000.0;
       }
     });
-    globals.mark("clock");
   }
 
   private final Map<Expr, Integer> locals = new HashMap<>();

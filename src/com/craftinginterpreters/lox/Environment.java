@@ -23,11 +23,7 @@ class Environment {
 
   Object get(Token name) {
     if (values.containsKey(name.lexeme)) {
-      if (tracker.contains(name.lexeme)) {
-        return values.get(name.lexeme);
-      }
-      // 未初始化或赋值的变量
-      throw new RuntimeError(name, "Uninitialized or assigned variable '" + name.lexeme + "'.");
+      return values.get(name.lexeme);
     }
 
     // 遍历环境链以找到变量
@@ -41,7 +37,6 @@ class Environment {
   void assign(Token name, Object value) {
     if (values.containsKey(name.lexeme)) {
       values.put(name.lexeme, value);
-      tracker.add(name.lexeme);
       return;
     }
 
