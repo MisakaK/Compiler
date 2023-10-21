@@ -6,3 +6,8 @@
 /dataSources.local.xml
 # 基于编辑器的 HTTP 客户端请求
 /httpRequests/
+
+# 忽略.idea目录下的文件
+/out
+# 但允许.gitignore文件自身不被忽略
+!/.gitignore

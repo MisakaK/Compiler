@@ -1,10 +1,8 @@
 package com.craftinginterpreters.lox;
 
 import java.text.DecimalFormat;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
 
 import static com.craftinginterpreters.lox.TokenType.*;
 import static com.craftinginterpreters.lox.lox.isPrompt;
@@ -52,17 +50,9 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   // 对变量表达式求值
   @Override
   public Object visitVariableExpr(Expr.Variable expr) {
-    return lookUpVariable(expr.name, expr);
-  }
-
-  private Object lookUpVariable(Token name, Expr expr) {
-    Integer distance = locals.get(expr);
-    if (distance != null) {
-      return environment.getAt(distance, name.lexeme);
-    }
-    else {
-      // 全局变量直接在全局环境中找
-      return globals.get(name);
+    Object value = environment.get(expr.name);
+    if (value == uninitialized) {
+      throw new RuntimeError(expr.name, "Variable must be initialized before use");
     }
     return value;
   }
@@ -70,13 +60,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   @Override
   public Object visitAssignExpr(Expr.Assign expr) {
     Object value = evaluate(expr.value);
-    Integer distance = locals.get(expr);
-    if (distance != null) {
-      environment.assignAt(distance, expr.name, value);
-    }
-    else {
-      globals.assign(expr.name, value);
-    }
+    environment.assign(expr.name, value);
     return value;
   }
 
@@ -167,10 +151,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   // 执行一条语句
   private void execute(Stmt stmt) {
     stmt.accept(this);
-  }
-
-  void resolve(Expr expr, int depth) {
-    locals.put(expr, depth);
   }
 
   void executeBlock(List<Stmt> statements, Environment environment) {
@@ -270,7 +250,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     throw new BreakException(stmt.keyword, "encountered break!");
   }
 
-  @Override
   public Object visitCommaExpr(Expr.Comma expr) {
     Object nowexpr = null;
     for (int i = 0; i < expr.commaList.size(); i++) {
@@ -406,8 +385,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
       }
     });
   }
-
-  private final Map<Expr, Integer> locals = new HashMap<>();
 
   void interpret(List<Stmt> statements) {
     try {
