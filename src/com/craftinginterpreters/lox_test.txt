@@ -1,7 +1,1 @@
-class abcd {
-    hello() {
-        return "hello";
-    }
-}
-
-print abcd;
+"fafa"();
