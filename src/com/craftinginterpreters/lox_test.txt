@@ -1,1 +1,4 @@
-"fafa"();
+class Bagel {}
+var bagel = Bagel();
+print Bagel;
+print bagel; // Prints "Bagel instance".
