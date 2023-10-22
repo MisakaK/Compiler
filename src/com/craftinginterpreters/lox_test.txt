@@ -1,4 +1,7 @@
-{
-var a;
-print a;
+class abcd {
+    hello() {
+        return "hello";
+    }
 }
+
+print abcd;
