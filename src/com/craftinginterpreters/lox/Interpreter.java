@@ -32,6 +32,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     return evaluate(expr.right);
   }
 
+  @Override
+  public Object visitSetExpr(Expr.Set expr) {
+    Object object = evaluate(expr.object);
+
+    if (!(object instanceof  LoxInstance)) {
+      throw new RuntimeError(expr.name, "Only instances have fields.");
+    }
+
+    Object value = evaluate(expr.value);
+    ((LoxInstance)object).set(expr.name, value);
+    return value;
+  }
+
   public Object visitGroupingExpr(Expr.Grouping expr) {
     return evaluate(expr.expression);
   }
@@ -394,11 +407,23 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     return function.call(this, arguments);
   }
 
+  @Override
+  public Object visitGetExpr(Expr.Get expr) {
+    Object object = evaluate(expr.object);
+    if (object instanceof LoxInstance) {
+      return ((LoxInstance)object).get(expr.name);
+    }
+
+    throw new RuntimeError(expr.name, "Only instances have properties.");
+  }
+
   // globals时终指向全局作用域
   final Environment globals = new Environment();
   private Environment environment = globals;
   private final Map<Expr, Integer> locals = new HashMap<>();
   private static Object uninitialized = new Object();
+
+
 
   // 定义clock本地函数
   Interpreter() {
