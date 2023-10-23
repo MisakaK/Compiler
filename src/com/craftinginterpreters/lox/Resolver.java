@@ -55,11 +55,16 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visitClassStmt(Stmt.Class stmt) {
     declare(stmt.name);
     define(stmt.name);
+    // 由于visitThis中会调用resolveLocal解析this，因此新建一个作用域
+    beginScope();
+    // 在方法内部遇到this表达式，就会解析一个“局部变量”
+    scopes.peek().put("this", new Variable(new Token(TokenType.THIS, "this", null, 0), VariableState.READ));
     // 遍历类中的方法
     for (Stmt.Function method : stmt.methods) {
       FunctionType declaration = FunctionType.METHOD;
       resolveFunction(method, declaration);
     }
+    endScope();
     return null;
   }
 
@@ -198,6 +203,12 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visitSetExpr(Expr.Set expr) {
     resolve(expr.value);
     resolve(expr.object);
+    return null;
+  }
+
+  @Override
+  public Void visitThisExpr(Expr.This expr) {
+    resolveLocal(expr, expr.keyword, true);
     return null;
   }
 
