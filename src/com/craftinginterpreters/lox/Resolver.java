@@ -9,6 +9,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   private final Interpreter interpreter;
   private final Stack<Map<String, Variable>> scopes = new Stack<>();
   private FunctionType currentFunction = FunctionType.NONE;
+  private ClassType currentClass = ClassType.NONE;
 
   Resolver(Interpreter interpreter) {
     this.interpreter = interpreter;
@@ -18,6 +19,12 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     NONE,
     FUNCTION,
     METHOD
+  }
+
+  // 标记是否在类声明中
+  private enum ClassType {
+    NONE,
+    CLASS
   }
 
   private static class Variable {
@@ -53,6 +60,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitClassStmt(Stmt.Class stmt) {
+    ClassType enclosingClass = currentClass;
+    currentClass = ClassType.CLASS;
     declare(stmt.name);
     define(stmt.name);
     // 由于visitThis中会调用resolveLocal解析this，因此新建一个作用域
@@ -65,6 +74,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       resolveFunction(method, declaration);
     }
     endScope();
+    currentClass = enclosingClass;
     return null;
   }
 
@@ -208,6 +218,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitThisExpr(Expr.This expr) {
+    if (currentClass == ClassType.NONE) {
+      lox.error(expr.keyword, "Can't use 'this' outside of a class.");
+    }
     resolveLocal(expr, expr.keyword, true);
     return null;
   }

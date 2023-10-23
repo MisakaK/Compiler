@@ -1,12 +1,3 @@
-class Thing {
-  getCallback() {
-    fun localFunction() {
-      print this;
-    }
-
-    return localFunction;
-  }
+fun a(){
+    print this;
 }
-
-var callback = Thing().getCallback();
-callback();
