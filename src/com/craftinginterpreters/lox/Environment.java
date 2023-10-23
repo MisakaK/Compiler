@@ -9,8 +9,6 @@ class Environment {
   // 对当前环境的外围环境的引用
   final Environment enclosing;
   private final Map<String, Object> values = new HashMap<>();
-  // 追踪未初始化或赋值的变量
-  private final Set<String> tracker = new HashSet<>();
 
   // 无参构造函数用于全局作用域环境
   Environment() {

@@ -16,7 +16,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   private enum FunctionType {
     NONE,
-    FUNCTION
+    FUNCTION,
+    METHOD
   }
 
   private static class Variable {
@@ -54,6 +55,11 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visitClassStmt(Stmt.Class stmt) {
     declare(stmt.name);
     define(stmt.name);
+    // 遍历类中的方法
+    for (Stmt.Function method : stmt.methods) {
+      FunctionType declaration = FunctionType.METHOD;
+      resolveFunction(method, declaration);
+    }
     return null;
   }
 
@@ -147,7 +153,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitGetExpr(Expr.Get expr) {
-    // 此处不会解析类的属性，类属性的访问在Interpreter中
+    // 此处只会递归到"."左边的表达式
     resolve(expr.object);
     return null;
   }
