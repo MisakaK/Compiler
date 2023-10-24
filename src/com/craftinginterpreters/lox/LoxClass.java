@@ -27,11 +27,22 @@ class LoxClass implements LoxCallable{
   @Override
   public Object call(Interpreter interpreter, List<Object> arguments) {
     LoxInstance instance = new LoxInstance(this);
+    // 查找init构造函数
+    LoxFunction initializer = findMethod("init");
+    // 如果找到init构造函数，立即绑定对象并调用init
+    if (initializer != null) {
+      initializer.bind(instance).call(interpreter, arguments);
+    }
     return instance;
   }
 
   @Override
   public int arity() {
-    return 0;
+    LoxFunction initializer = findMethod("init");
+    if (initializer == null) {
+      return 0;
+    }
+    // 返回init构造函数的元数
+    return initializer.arity();
   }
 }

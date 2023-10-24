@@ -219,7 +219,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     // 类中的每个方法声明都会变成一个LoxFunction对象
     Map<String, LoxFunction> methods = new HashMap<>();
     for (Stmt.Function method : stmt.methods) {
-      LoxFunction function = new LoxFunction(method, environment);
+      // 用户定义的函数是否名为init
+      LoxFunction function = new LoxFunction(method, environment, method.name.lexeme.equals("init"));
       methods.put(method.name.lexeme, function);
     }
     LoxClass klass = new LoxClass(stmt.name.lexeme, methods);
@@ -241,7 +242,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   @Override
   public Void visitFunctionStmt(Stmt.Function stmt) {
     // 此处的环境为函数声明时的环境
-    LoxFunction function = new LoxFunction(stmt, environment);
+    LoxFunction function = new LoxFunction(stmt, environment, false);
     environment.define(stmt.name.lexeme, function);
     return null;
   }
